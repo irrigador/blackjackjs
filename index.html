@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Jogo de Blackjack</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f2f2f2;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+h1 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+p {
+  color: #555;
+  max-width: 500px;
+  text-align: justify;
+  margin-bottom: 20px;
+}
+
+button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin: 5px;
+  border-radius: 5px;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+#playerHand, #dealerHand {
+  font-weight: bold;
+}
+
+#result {
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+#playerScore, #dealerScore {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+</style>
+
+
+</head>
+<body>
+
+<h1>Jogo de Blackjack</h1>
+
+<p>Bem-vindo ao Jogo de Blackjack! O objetivo é chegar o mais perto possível de 21 pontos sem ultrapassar esse valor. As cartas numéricas valem seu valor, as cartas J, Q e K valem 10 pontos e o Ás (A) pode valer 1 ou 11, dependendo da situação.</p>
+
+<button id="dealButton">Iniciar</button>
+<button id="hitButton">Pedir Carta</button>
+<button id="standButton">Parar</button>
+
+<p>Mão do Jogador: <span id="playerHand"></span></p>
+<p>Mão do Dealer: <span id="dealerHand"></span></p>
+<p>Pontuação do Jogador: <span id="playerScore"></span></p>
+<p>Pontuação do Dealer: <span id="dealerScore"></span></p>
+<p id="result"></p>
+
+<script>
+const baralho = [
+  '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'
+];
+
+let maoJogador = [];
+let maoDealer = [];
+
+const maoJogadorElement = document.getElementById('playerHand');
+const maoDealerElement = document.getElementById('dealerHand');
+const pontuacaoJogadorElement = document.getElementById('playerScore');
+const pontuacaoDealerElement = document.getElementById('dealerScore');
+const resultadoElement = document.getElementById('result');
+const dealButton = document.getElementById('dealButton');
+const hitButton = document.getElementById('hitButton');
+const standButton = document.getElementById('standButton');
+
+function embaralharBaralho() {
+  for (let i = baralho.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [baralho[i], baralho[j]] = [baralho[j], baralho[i]];
+  }
+}
+
+function distribuirMaosIniciais() {
+  maoJogador = [baralho.pop(), baralho.pop()];
+  maoDealer = [baralho.pop(), baralho.pop()];
+  
+  maoJogadorElement.textContent = maoJogador.join(', ');
+  maoDealerElement.textContent = maoDealer[0] + ', ?';
+  
+  atualizarPontuacoes();
+}
+
+function atualizarPontuacoes() {
+  pontuacaoJogadorElement.textContent = calcularValorMao(maoJogador);
+  pontuacaoDealerElement.textContent = calcularValorMao(maoDealer);
+}
+
+function calcularValorMao(mao) {
+  let valor = 0;
+  let ases = 0;
+  
+  for (const carta of mao) {
+    if (carta === 'A') {
+      ases++;
+      valor += 11;
+    } else if (['K', 'Q', 'J'].includes(carta)) {
+      valor += 10;
+    } else {
+      valor += parseInt(carta);
+    }
+  }
+  
+  while (valor > 21 && ases > 0) {
+    valor -= 10;
+    ases--;
+  }
+  
+  return valor;
+}
+
+dealButton.addEventListener('click', () => {
+  embaralharBaralho();
+  distribuirMaosIniciais();
+  resultadoElement.textContent = '';
+  dealButton.disabled = true;
+  hitButton.disabled = false;
+  standButton.disabled = false;
+});
+
+hitButton.addEventListener('click', () => {
+  maoJogador.push(baralho.pop());
+  maoJogadorElement.textContent = maoJogador.join(', ');
+  atualizarPontuacoes();
+  
+  if (calcularValorMao(maoJogador) > 21) {
+    finalizarJogo('Dealer vence!');
+  }
+});
+
+standButton.addEventListener('click', () => {
+  while (calcularValorMao(maoDealer) < 17) {
+    maoDealer.push(baralho.pop());
+  }
+  
+  maoDealerElement.textContent = maoDealer.join(', ');
+  atualizarPontuacoes();
+  
+  if (calcularValorMao(maoDealer) > 21 || calcularValorMao(maoDealer) < calcularValorMao(maoJogador)) {
+    finalizarJogo('Jogador vence!');
+  } else if (calcularValorMao(maoDealer) > calcularValorMao(maoJogador)) {
+    finalizarJogo('Dealer vence!');
+  } else {
+    finalizarJogo('Empate!');
+  }
+});
+
+function finalizarJogo(mensagem) {
+  resultadoElement.textContent = mensagem;
+  dealButton.disabled = false;
+  hitButton.disabled = true;
+  standButton.disabled = true;
+}
+
+</script>
+
+</body>
+</html>
